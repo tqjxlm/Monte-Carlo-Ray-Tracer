@@ -6,10 +6,20 @@ Course assignment for Computer Graphics.
 
 ## Features
 
-* Support: simple obj models with well defined materials
-* Support: reflection and refraction
-* Support: KDTree and AABB acceleration
-* Support: configuration for resolution, ray depth and ray density
+* Ray tracing: reflection and refraction
+* Lighting: Blinn Phong model
+* Acceleration: KDTree with AABB
+* Configurable: resolution, ray depth and ray density can be configured as needed
+
+### File Format
+
+__Notice__: an arbitrary obj model may not work for this project.
+
+The program can load simple obj models, but the *.mtl format has to be modified for use in global illumination:
+
+* Ks for reflection rate
+* Ka for specular rate
+* Tf for opacity
 
 ## Dependencies
 
