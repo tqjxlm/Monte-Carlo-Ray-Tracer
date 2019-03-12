@@ -6,8 +6,8 @@ Course assignment for Computer Graphics.
 
 ## Features
 
-* Ray tracing: reflection and refraction
-* Lighting: Blinn Phong model
+* Ray tracing: stratified sampling and weighted cosine hemisphere sampling
+* Lighting: Blinn Phong model with reflection and refraction
 * Acceleration: KDTree with AABB
 * Configurable: resolution, ray depth and ray density can be configured as needed
 

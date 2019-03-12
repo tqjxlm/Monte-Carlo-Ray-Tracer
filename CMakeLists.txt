@@ -16,7 +16,6 @@ ADD_DEFINITIONS(-D_UNICODE)
 
 include_directories(include)
 file(GLOB SOURCES src/*.cpp include/*.h)
-set(ENV{RSC_DIR} ${CMAKE_SOURCE_DIR})
 
 ###############################################################################
 ## target definitions #########################################################
@@ -42,17 +41,17 @@ if(WIN32)
     "<?xml version=\"1.0\" encoding=\"utf-8\"?>     \
     <Project ToolsVersion=\"4.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">
     <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|x64'\">
-        <LocalDebuggerCommandArguments>2</LocalDebuggerCommandArguments>
-        <LocalDebuggerWorkingDirectory>$(RSC_DIR)</LocalDebuggerWorkingDirectory>
+        <LocalDebuggerWorkingDirectory>${CMAKE_BINARY_DIR}</LocalDebuggerWorkingDirectory>
         <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     </PropertyGroup>
     <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|x64'\">
-        <LocalDebuggerCommandArguments>2</LocalDebuggerCommandArguments>
-        <LocalDebuggerWorkingDirectory>$(RSC_DIR)</LocalDebuggerWorkingDirectory>
+        <LocalDebuggerWorkingDirectory>${CMAKE_BINARY_DIR}</LocalDebuggerWorkingDirectory>
         <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     </PropertyGroup>
     </Project>")    
 endif()
+
+file(COPY ${CMAKE_SOURCE_DIR}/resources DESTINATION ${CMAKE_BINARY_DIR})
 
 ###############################################################################
 ## installation ###############################################################
