@@ -2,13 +2,16 @@
 
 A CPU renderer using Monte-Carlo ray tracing algorithm.
 
-Course assignment for Computer Graphics.
+It's a course assignment for Computer Graphics.
+
+Tested under Windows 10, Visual Studio 2015 x64, while it is theoretically cross-platform.
 
 ## Features
 
-* Ray tracing: stratified sampling and weighted cosine hemisphere sampling
-* Lighting: Blinn Phong model with reflection and refraction
-* Acceleration: KDTree with AABB
+* Ray tracing: Monte-Carlo strategy with stratified sampling and weighted cosine hemisphere sampling
+* Lighting: native Blinn Phong model with reflection and refraction
+* Acceleration: KDTree with AABB, OpenMP
+* Material: Lambertian material support only
 * Configurable: resolution, ray depth and ray density can be configured as needed
 
 ### File Format
@@ -21,18 +24,22 @@ The program can load simple obj models, but the *.mtl format has to be modified 
 * Ka for specular rate
 * Tf for opacity
 
-## Dependencies
+### Dependencies
 
 * glm
 * [tiny obj loader](https://github.com/syoyo/tinyobjloader)
 
+All the dependencies above are head-only and already included in the repository.
+
+You may need to use another version of GLM if your building environment is different from mine (VS 2015 X64)
+
 ## Usage
 
-* Use CMake to configure the project
+* Use CMake (3.9+) to configure the project
 * Modify the render settings in Main.cpp
-* Compile (only tested for Win 10 VS2015 x64)
+* Compile
 * Run and wait (patience!)
-* The output image will be at the working directory (if you run in Visual Studio, it should be the project root)
+* The output image will be at the working directory, i.e. the build directory specified in CMake
 
 If you find the result unsatisfying, just increment the RAYS_PER_PIXEL variable in Main.cpp. You'll wait much longer for a better result.
 

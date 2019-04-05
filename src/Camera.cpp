@@ -10,7 +10,7 @@
 #include "Ray.hpp"
 #include "Math.hpp"
 
-#define LOG_INTERVAL 5
+#define LOG_PER_SEC 1
 #define GAMMA_CORR true
 #define GAMMA 0.6f
 
@@ -24,6 +24,7 @@ Camera::Camera(const unsigned int _width, const unsigned int _height):
 void  Camera::render(const Scene &scene, Renderer &renderer, const unsigned int RAYS_PER_PIXEL,
                      const glm::vec3 eye, glm::vec3 direction, glm::vec3 up)
 {
+    // Calculate the retina plane (which receives rays)
     direction = glm::normalize(direction);
 
     glm::vec3  center = eye + direction * 2.0f;
@@ -57,18 +58,19 @@ void  Camera::render(const Scene &scene, Renderer &renderer, const unsigned int 
     double           timeSinceLastLog    = 0.0;
 
     // Shoot multiple rays through every pixel.
+
+    // Parallelize using OMP.
+#pragma omp parallel for
+
     for (unsigned int y = 0; y < width; ++y)
     {
         const auto  before = std::chrono::high_resolution_clock::now();
-
-        // Parallelize using OMP.
-#pragma omp parallel for schedule(dynamic, 1)
 
         for (int z = 0; z < static_cast<int>(height); ++z)
         {
             // Shoot a bunch of rays through the pixel (y, z), and accumulate colors.
             Ray        ray;
-            glm::vec3  colorAccumulator = colorAccumulator = glm::vec3(0, 0, 0);
+            glm::vec3  colorAccumulator(0);
 
             for (float c = 0; c < INV_WIDTH - COLUMN_PIXEL_STEP + std::numeric_limits<float>::min(); c += COLUMN_PIXEL_STEP)
             {
@@ -84,7 +86,7 @@ void  Camera::render(const Scene &scene, Renderer &renderer, const unsigned int 
                     // Create ray.
                     ray.origin    = glm::vec3(nx, ny, nz);
                     ray.direction = glm::normalize(ray.origin - eye);
-                    const float  rayFactor = std::max(0.0f, glm::dot(ray.origin, CAMERA_PLANE_NORMAL));
+                    const float  rayFactor = std::max(0.0f, glm::dot(-ray.direction, CAMERA_PLANE_NORMAL));
 
                     // Shoot ray.
                     colorAccumulator += rayFactor * renderer.getPixelColor(ray);
@@ -107,12 +109,10 @@ void  Camera::render(const Scene &scene, Renderer &renderer, const unsigned int 
         long long     mins              = (estimatedTimeLeft / 60) % 60;
         long long     hours             = ((estimatedTimeLeft / 60) / 60);
 
-        if (timeSinceLastLog > LOG_INTERVAL)
+        if (timeSinceLastLog > LOG_PER_SEC)
         {
             timeSinceLastLog = 0.0;
-            std::cout << std::setprecision(1) << std::fixed;
-            std::cout << "\rFinished " << percentageDone << "%. ";
-            std::cout << "Remaining " << hours << ": " << mins << ": " << secs << ".";
+            printf("\rProgress %.1lf%%. Estimated remaining %02lld: %02lld: %02lld.", percentageDone, hours, mins, secs);
         }
     }
 
@@ -139,7 +139,7 @@ bool  Camera::writeImageTGA(const std::string path) const
 
     o.put(width & 0x00FF);
     o.put((width & 0xFF00) >> 8);
-    o.put(width & 0x00FF);
+    o.put(height & 0x00FF);
     o.put((height & 0xFF00) >> 8);
     o.put(32); // 24 bit bitmap.
     o.put(0);

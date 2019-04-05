@@ -15,7 +15,7 @@ ADD_DEFINITIONS(-D_UNICODE)
 ###############################################################################
 
 include_directories(include)
-file(GLOB SOURCES src/*.cpp include/*.h)
+file(GLOB SOURCES src/*.cpp include/*.h include/*.hpp)
 
 ###############################################################################
 ## target definitions #########################################################
@@ -34,6 +34,11 @@ include_directories(${THIRD_PARTY_DIR}/include)
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
 target_link_libraries(MT-Tracer INTERFACE ${OPENGL_LIBRARIES})
+
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(MT-Tracer PUBLIC OpenMP::OpenMP_CXX)
+endif()
 
 if(WIN32)
     # visual studio running environment

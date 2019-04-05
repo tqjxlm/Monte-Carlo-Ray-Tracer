@@ -42,7 +42,7 @@ public:
     virtual glm::vec3  calculateSpecularLighting(const glm::vec3 &inDirection, const glm::vec3 &outDirection,
                                                  const glm::vec3 &normal, const glm::vec3 &incomingRadiance) const
     {
-        // const glm::vec3 lightReflection = glm::reflect(inDirection, normal);
+        // Blinn-Phong
         const glm::vec3  half = glm::normalize(outDirection - inDirection);
         float            sqr  = glm::pow<float>(glm::dot(normal, half), specularExponent);
 

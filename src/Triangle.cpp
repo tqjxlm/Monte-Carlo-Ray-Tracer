@@ -36,7 +36,7 @@ Triangle::Triangle(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3, glm::vec3 _n1, g
         flat     = false;
         faceNorm = Math::calcNormal(_v1, _v2, _v3);
 
-        for each (glm::vec3 &norm in normals)
+        for (auto &norm : normals)
         {
             if (glm::dot(faceNorm, norm) < 0.0f)
             {

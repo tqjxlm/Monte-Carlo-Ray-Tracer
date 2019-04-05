@@ -1,0 +1,65 @@
+diff a/src/Renderer.cpp b/src/Renderer.cpp	(rejected hunks)
+@@ -36,9 +36,9 @@
+     const glm::vec3  intersectionPoint = ray.origin + ray.direction * intersectionDistance;
+ 
+     // Retrieve primitive information for the intersected object.
+-    const auto &intersectionRenderGroup = scene.getRenderGroup(intersectionRenderGroupIndex);
+-    const auto intersectionTriangle    = intersectionRenderGroup.triangles[intersectionTriangleIndex];
+-    const glm::vec3  hitNormal = intersectionTriangle->getNormal(intersectionPoint);
++    const auto      &intersectionRenderGroup = scene.getRenderGroup(intersectionRenderGroupIndex);
++    const auto       intersectionTriangle    = intersectionRenderGroup.triangles[intersectionTriangleIndex];
++    const glm::vec3  hitNormal               = intersectionTriangle->getNormal(intersectionPoint);
+ 
+     // Back face culling
+     if (glm::dot(-ray.direction, hitNormal) < std::numeric_limits<float>::min())
+@@ -55,17 +55,20 @@
+         // TODO: Not sure why light sources are not bright enough,
+         // an additional light should be added to compensate
+         if (currentDepth == 0)
++        {
+             return hitMaterial->getEmissionColor();
++        }
+         else
+-            return  glm::dot(-ray.direction, hitNormal) * hitMaterial->getEmissionColor();
++        {
++            return glm::dot(-ray.direction, hitNormal) * hitMaterial->getEmissionColor();
++        }
+     }
+ 
+     // Initialize color accumulator
+     glm::vec3    colorAccumulator = glm::vec3(0);
+     const float  rf               = 1.0f - hitMaterial->reflectivity;
+     const float  tf               = 1.0f - hitMaterial->transparency;
+-
+-    bool shouldDiffuse = (rf > std::numeric_limits<float>::min()) && (tf > std::numeric_limits<float>::min());
++    bool         shouldDiffuse    = (rf > std::numeric_limits<float>::min()) && (tf > std::numeric_limits<float>::min());
+ 
+     // Direct lighting
+     if (shouldDiffuse)
+@@ -135,20 +138,20 @@
+     // Mirror reflective lighting.
+     if (hitMaterial->isReflective())
+     {
+-        const float  n1 = 1.0f;
+-        const float  n2 = rf;
++        const float  n1            = 1.0f;
++        const float  n2            = rf;
+         const float  reflectFactor = Math::calculateSchlicksApproximation(ray.direction, hitNormal, n1, n2);
+-        Ray  reflectedRay(intersectionPoint + hitNormal * RAY_EPSILON, glm::reflect(ray.direction, hitNormal));
++        Ray          reflectedRay(intersectionPoint + hitNormal * RAY_EPSILON, glm::reflect(ray.direction, hitNormal));
+ 
+         colorAccumulator += reflectFactor * traceRay(reflectedRay, currentDepth + 1);
+     }
+     // Refracted lighting. (Reflectiveness is a special case of refractiveness, so they won't happen in the same time)
+     else if (hitMaterial->isTransparent())
+     {
+-        const float  n1 = 1.0f;
+-        const float  n2 = hitMaterial->refractiveIndex;
++        const float  n1                     = 1.0f;
++        const float  n2                     = hitMaterial->refractiveIndex;
+         const float  schlickConstantOutside = Math::calculateSchlicksApproximation(ray.direction, hitNormal, n1, n2);
+-        Ray        refractedRay(intersectionPoint - hitNormal * RAY_EPSILON, glm::refract(ray.direction, hitNormal, n1 / n2));
++        Ray          refractedRay(intersectionPoint - hitNormal * RAY_EPSILON, glm::refract(ray.direction, hitNormal, n1 / n2));
+ 
+         if (scene.renderGroupRayCast(refractedRay, intersectionRenderGroupIndex, intersectionTriangleIndex, intersectionDistance))
+         {

@@ -52,13 +52,11 @@ public:
         glm::vec3  bl = glm::vec3(
             std::min(std::min(vertices[0].x, vertices[1].x), vertices[2].x),
             std::min(std::min(vertices[0].y, vertices[1].y), vertices[2].y),
-            std::min(std::min(vertices[0].z, vertices[1].z), vertices[2].z)
-            );
+            std::min(std::min(vertices[0].z, vertices[1].z), vertices[2].z));
         glm::vec3  tr = glm::vec3(
             std::max(std::max(vertices[0].x, vertices[1].x), vertices[2].x),
             std::max(std::max(vertices[0].y, vertices[1].y), vertices[2].y),
-            std::max(std::max(vertices[0].z, vertices[1].z), vertices[2].z)
-            );
+            std::max(std::max(vertices[0].z, vertices[1].z), vertices[2].z));
 
         return AABB(bl, tr);
     }

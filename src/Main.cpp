@@ -100,7 +100,7 @@ int  main()
     // Get render settings
     const unsigned int     PIXELS_W        = 1024;
     const unsigned int     PIXELS_H        = 1024;
-    const unsigned int     RAYS_PER_PIXEL  = 1;
+    const unsigned int     RAYS_PER_PIXEL  = 128;
     const unsigned int     MAX_RAY_DEPTH   = 5;
     const PredefinedScene  predefinedScene = SCENE04;
 

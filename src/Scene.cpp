@@ -1,9 +1,6 @@
 #include "Scene.h"
 
-#include <memory>
-#include <algorithm>
 #include <cassert>
-#include <iostream>
 #include <limits>
 
 #include <glm/gtx/norm.hpp>
@@ -101,7 +98,7 @@ bool  Scene::rayCast(const Ray &ray, unsigned int &intersectionRenderGroupIndex,
 {
     float  closestInterectionDistance = std::numeric_limits<float>::max();
 
-    // Check if the ray intersects with any enabled render group in the scene.
+    // TODO: Use a BVH to avoid traversal
     for (unsigned int i = 0; i < renderGroups.size(); ++i)
     {
         if (!renderGroups[i].enabled)

@@ -45,12 +45,22 @@ public:
         }
     }
 
-    Triangle & getTriangle(unsigned int renderGroupIndex, unsigned int index)
+    const Mesh & getRenderGroup(unsigned renderGroupIndex) const
+    {
+        return renderGroups[renderGroupIndex];
+    }
+
+    const Triangle & getTriangle(unsigned int renderGroupIndex, unsigned int index) const
     {
         return *(renderGroups[renderGroupIndex].triangles[index]);
     }
 
-    // Casts a ray through the scene. Returns true if there was an intersection.
+    const std::vector<Mesh *> & getEmissiveMeshes() const
+    {
+        return emissiveMesh;
+    }
+
+    // Casts a ray through the scene. Save the closest intersection.
     bool  rayCast(const Ray &ray, unsigned int &intersectionRenderGroupIndex,
                   unsigned int &intersectionTriangleIndex, float &intersectionDistance) const;
 
@@ -65,7 +75,7 @@ public:
                   const tinyobj::mesh_t &mesh, const std::vector<tinyobj::material_t> &materials,
                   const glm::mat4 &modelMatrix = glm::mat4());
 
-public:
+private:
     std::vector<Mesh>        renderGroups;
     std::vector<Material *>  materials;
     std::vector<Mesh *>      emissiveMesh;
