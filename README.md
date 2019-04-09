@@ -54,11 +54,11 @@ scene 1: 1024 rays / pixel
 
 scene 2: 512 rays / pixel
 
-![image not available](samples/scene2_512.png)
+![image not available](samples/scene2_256.png)
 
 scene 3: 128 rays / pixel
 
-![image not available](samples/scene3_128.png)
+![image not available](samples/scene3_256.png)
 
 scene 4: 256 rays / pixel
 

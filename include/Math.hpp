@@ -39,15 +39,12 @@ static inline glm::vec3  calcNormal(const glm::vec3 &v1, const glm::vec3 &v2, co
 static inline float  bilinearInterpolation(const float dy, const float dz,
                                            const float x1, const float x2, const float x3, const float x4)
 {
-    assert(dy >= -std::numeric_limits<float>::min() && dy <= 1 + std::numeric_limits<float>::min());
-    assert(dz >= -std::numeric_limits<float>::min() && dz <= 1 + std::numeric_limits<float>::min());
     const float  idy = 1 - dy;
     const float  idz = 1 - dz;
     float        a1  = idy * dz; // lower right area.
     float        a2  = dy * dz; // lower left area.
     float        a3  = dy * idz; // upper left area.
     float        a4  = idy * idz; // upper right area.
-    assert(abs(a1 + a2 + a3 + a4 - 1.0f) < std::numeric_limits<float>::min() * 10.0f);
 
     return a3 * x1 + a4 * x2 + a1 * x3 + a2 * x4;
 }

@@ -152,7 +152,7 @@ glm::vec3  Renderer::traceRay(const Ray &_ray, const unsigned int currentDepth) 
         const float  schlickConstantOutside = Math::calculateSchlicksApproximation(ray.direction, hitNormal, n1, n2);
         Ray          refractedRay(intersectionPoint - hitNormal * RAY_EPSILON, glm::refract(ray.direction, hitNormal, n1 / n2));
 
-        if (scene.rayCast(refractedRay, intersectionRenderGroupIndex, intersectionTriangleIndex, intersectionDistance))
+        if (scene.renderGroupRayCast(refractedRay, intersectionRenderGroupIndex, intersectionTriangleIndex, intersectionDistance))
         {
             // Self-intersected, cast ray from the other point to the outer world and do refrection twice
             const auto      &refractedRayHitTriangle    = intersectionRenderGroup.triangles[intersectionTriangleIndex];
@@ -161,9 +161,11 @@ glm::vec3  Renderer::traceRay(const Ray &_ray, const unsigned int currentDepth) 
             float            schlickConstantInside      = Math::calculateSchlicksApproximation(refractedRay.direction, -refractedHitNormal, n2, n1);
             Ray              refractedRayOut(refractedIntersectionPoint + RAY_EPSILON * refractedHitNormal,
                                              glm::refract(refractedRay.direction, -refractedHitNormal, n2 / n1));
-            const float  f1               = (1.0f - schlickConstantOutside) * (hitMaterial->transparency);
-            const float  f2               = (1.0f - schlickConstantInside);
-            const auto   incomingRadiance = f2 * traceRay(refractedRayOut, currentDepth + 1);
+            const float  f1 = (1.0f - schlickConstantOutside) * (hitMaterial->transparency);
+            const float  f2 = (1.0f - schlickConstantInside);
+
+            // Don't increase depth for refracted rays
+            const auto  incomingRadiance = f2 * traceRay(refractedRayOut, currentDepth);
             colorAccumulator += f1 * hitMaterial->calculateDiffuseLighting(refractedRay.direction, -ray.direction, hitNormal, incomingRadiance);
         }
         else
