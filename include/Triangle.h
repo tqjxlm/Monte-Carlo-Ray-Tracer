@@ -12,7 +12,7 @@ public:
     Triangle(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3, glm::vec3 _n1, glm::vec3 _n2, glm::vec3 _n3, int index);
 
     Triangle(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3, glm::vec3 _norm, int index):
-        vertices{_v1, _v2, _v3}, faceNorm(_norm), edges{_v2 - _v1, _v3 - _v1}, meshIndex(index)
+        vertices{_v1, _v2, _v3}, edges{_v2 - _v1, _v3 - _v1}, faceNorm(_norm), meshIndex(index)
     {
         flat = true;
     }

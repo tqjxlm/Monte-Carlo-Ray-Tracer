@@ -75,9 +75,9 @@ inline glm::vec3  getFaceNormal(const tinyobj::attrib_t &attrib, const tinyobj::
 inline LambertianMaterial* toLambertianMaterial(const tinyobj::material_t *material)
 {
     LambertianMaterial *meshMaterial;
-    float               opacity      = (material->transmittance[0] + material->transmittance[1] + material->transmittance[2]) / 3;
-    float               reflectivity = (material->specular[0] + material->specular[1] + material->specular[2]) / 3;
-    float               specularity  = (material->ambient[0] + material->ambient[1] + material->ambient[2]) / 3;
+    float               opacity      = material->dissolve;
+    float               reflectivity = (material->ambient[0] + material->ambient[1] + material->ambient[2]) / 3;
+    float               specularity  = (material->specular[0] + material->specular[1] + material->specular[2]) / 3;
     float               emissitivity = (material->emission[0] + material->emission[1] + material->emission[2]) / 3;
 
     if ((material->emission[0] > 0) || (material->emission[1] > 0) || (material->emission[2] > 0))

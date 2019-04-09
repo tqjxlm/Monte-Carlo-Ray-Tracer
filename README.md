@@ -9,9 +9,8 @@ Tested under Windows 10, Visual Studio 2015 x64, while it is theoretically cross
 ## Features
 
 * Ray tracing: Monte-Carlo strategy with stratified sampling and weighted cosine hemisphere sampling
-* Lighting: native Blinn Phong model with reflection and refraction
-* Acceleration: KDTree with AABB, OpenMP
-* Material: Lambertian material support only
+* Lighting: direct and indirect light with reflection and refraction
+* Acceleration: KDTree, OpenMP
 * Configurable: resolution, ray depth and ray density can be configured as needed
 
 ### File Format
@@ -20,9 +19,7 @@ __Notice__: an arbitrary obj model may not work for this project.
 
 The program can load simple obj models, but the *.mtl format has to be modified for use in global illumination:
 
-* Ks for reflection rate
-* Ka for specular rate
-* Tf for opacity
+* Ka - reflection rate
 
 ### Dependencies
 
@@ -31,7 +28,7 @@ The program can load simple obj models, but the *.mtl format has to be modified 
 
 All the dependencies above are head-only and already included in the repository.
 
-You may need to use another version of GLM if your building environment is different from mine (VS 2015 X64)
+You may need to use another version of GLM if your building environment is different from mine (VS 2017 X64)
 
 ## Usage
 

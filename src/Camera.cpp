@@ -10,15 +10,24 @@
 #include "Ray.hpp"
 #include "Math.hpp"
 
-#define LOG_PER_SEC 1
-#define GAMMA_CORR true
-#define GAMMA 0.6f
+static const double  LOG_PER_SEC = 0.3;
+static const float   GAMMA       = 0.6f;
+
+inline void  toHumanTime(long long time, long long &hours, long long &mins, long long &secs)
+{
+    secs  = time % 60;
+    mins  = (time / 60) % 60;
+    hours = ((time / 60) / 60);
+}
 
 Camera::Camera(const unsigned int _width, const unsigned int _height):
     width(_width), height(_height)
 {
     pixels.assign(width, std::vector<Pixel>(height));
     discretizedPixels.assign(width, std::vector<glm::u8vec3>(height));
+
+    totalPixels   = width * height;
+    currentPixels = 0;
 }
 
 void  Camera::render(const Scene &scene, Renderer &renderer, const unsigned int RAYS_PER_PIXEL,
@@ -37,38 +46,35 @@ void  Camera::render(const Scene &scene, Renderer &renderer, const unsigned int 
     glm::vec3   c4        = center + right + up;
     const auto  startTime = std::chrono::high_resolution_clock::now();
 
-    // Initalize the random engine.
+    // Initalize the random engine
     std::random_device                     rd;
     std::default_random_engine             gen(rd());
     std::uniform_real_distribution<float>  rand(0, 1.0f - std::numeric_limits<float>::min());
 
-    // Precompute inverse widths and heights.
+    // Precompute inverse widths and heights
     const float  INV_WIDTH          = 1.0f / static_cast<float>(width);
     const float  INV_HEIGHT         = 1.0f / static_cast<float>(height);
     const float  INV_RAYS_PER_PIXEL = 1.0f / static_cast<float>(RAYS_PER_PIXEL);
 
-    // Calculate step lengths.
+    // Calculate step lengths
     const float  SQRT_QUADS_PER_PIXEL     = sqrtf(static_cast<float>(RAYS_PER_PIXEL));
     const float  INV_SQRT_QUADS_PER_PIXEL = 1.0f / SQRT_QUADS_PER_PIXEL;
     const float  COLUMN_PIXEL_STEP        = INV_WIDTH * INV_SQRT_QUADS_PER_PIXEL;
     const float  ROW_PIXEL_STEP           = INV_HEIGHT * INV_SQRT_QUADS_PER_PIXEL;
 
-    // Camera plane normal.
+    // Camera plane normal
     const glm::vec3  CAMERA_PLANE_NORMAL = -glm::normalize(glm::cross(c1 - c2, c1 - c4));
-    double           timeSinceLastLog    = 0.0;
 
-    // Shoot multiple rays through every pixel.
+    // Shoot multiple rays through every pixel
 
-    // Parallelize using OMP.
+    // Parallelize using OMP
 #pragma omp parallel for
 
-    for (unsigned int y = 0; y < width; ++y)
+    for (int y = 0; y < static_cast<int>(width); ++y)
     {
-        const auto  before = std::chrono::high_resolution_clock::now();
-
         for (int z = 0; z < static_cast<int>(height); ++z)
         {
-            // Shoot a bunch of rays through the pixel (y, z), and accumulate colors.
+            // Shoot a bunch of rays through the pixel (y, z), and accumulate colors
             Ray        ray;
             glm::vec3  colorAccumulator(0);
 
@@ -76,7 +82,7 @@ void  Camera::render(const Scene &scene, Renderer &renderer, const unsigned int 
             {
                 for (float r = 0; r < INV_HEIGHT - ROW_PIXEL_STEP + std::numeric_limits<float>::min(); r += ROW_PIXEL_STEP)
                 {
-                    // Calculate camera plane ray position using stratified sampling.
+                    // Calculate camera plane ray position using stratified sampling
                     const float  ylerp = y * INV_WIDTH + c + rand(gen) * COLUMN_PIXEL_STEP;
                     const float  zlerp = z * INV_HEIGHT + r + rand(gen) * ROW_PIXEL_STEP;
                     const float  nx    = Math::bilinearInterpolation(ylerp, zlerp, c1.x, c2.x, c3.x, c4.x);
@@ -93,43 +99,29 @@ void  Camera::render(const Scene &scene, Renderer &renderer, const unsigned int 
                 }
             }
 
-            // Set pixel color dependent on the traced ray.
+            // Set pixel color dependent on the traced ray
             pixels[y][z].color = INV_RAYS_PER_PIXEL * colorAccumulator;
-        }
 
-        // Estimate time left.
-        const auto    now  = std::chrono::high_resolution_clock::now();
-        const double  step = (double)std::chrono::duration_cast<std::chrono::milliseconds>(now - before).count();
-        timeSinceLastLog += step * 0.001;
-        auto          elapsedTime       = std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count();
-        const double  percentageDone    = 100 * (y / (double)width);
-        const double  percentageLeft    = (100 - percentageDone);
-        long long     estimatedTimeLeft = (long long)llround((elapsedTime / percentageDone) * percentageLeft * 0.001);
-        long long     secs              = estimatedTimeLeft % 60;
-        long long     mins              = (estimatedTimeLeft / 60) % 60;
-        long long     hours             = ((estimatedTimeLeft / 60) / 60);
-
-        if (timeSinceLastLog > LOG_PER_SEC)
-        {
-            timeSinceLastLog = 0.0;
-            printf("\rProgress %.1lf%%. Estimated remaining %02lld: %02lld: %02lld.", percentageDone, hours, mins, secs);
+            logProgress();
         }
     }
 
     const auto  endTime = std::chrono::high_resolution_clock::now();
-    const auto  took    = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-    std::cout << std::endl << "Rendering finished. Total time: " << (took / 1000.0) << " seconds." << std::endl << std::endl;
+    const auto  took = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    long long   hours, mins, secs;
+    toHumanTime(took / 1000, hours, mins, secs);
+    printf("\nRendering finished. Total time:  %02lld: %02lld: %02lld.\n", hours, mins, secs);
 
-    // Create the final discretized image. Should always be done immediately after the rendering step.
+    // Create the final discretized image. Should always be done immediately after the rendering step
     createImage();
 }
 
 bool  Camera::writeImageTGA(const std::string path) const
 {
-    // Initialize.
+    // Initialize
     std::ofstream  o(path.c_str(), std::ios::out | std::ios::binary);
 
-    // Write header.
+    // Write header
     const std::string  header = "002000000000";
 
     for (unsigned int i = 0; i < header.length(); ++i)
@@ -144,7 +136,7 @@ bool  Camera::writeImageTGA(const std::string path) const
     o.put(32); // 24 bit bitmap.
     o.put(0);
 
-    // Write data.
+    // Write data
     for (unsigned int y = 0; y < height; ++y)
     {
         for (unsigned int x = 0; x < width; ++x)
@@ -164,7 +156,7 @@ bool  Camera::writeImageTGA(const std::string path) const
 
 void  Camera::createImage()
 {
-    // Find max color intensity.
+    // Find max color intensity
     float  maxIntensity = 0;
 
     for (size_t i = 0; i < width; ++i)
@@ -178,9 +170,7 @@ void  Camera::createImage()
         }
     }
 
-#if GAMMA_CORR
-
-    // Squash image.
+    // GAMMA correction
     for (size_t i = 0; i < width; ++i)
     {
         for (size_t j = 0; j < height; ++j)
@@ -190,9 +180,8 @@ void  Camera::createImage()
     }
 
     maxIntensity = glm::pow(maxIntensity, GAMMA);
-#endif
 
-    // Discretize pixels using the max intensity. Every discretized value must be between 0 and 255.
+    // Discretize pixels using the max intensity. Every discretized value must be between 0 and 255
     glm::u8      discretizedMaxIntensity { };
     const float  f = 254.99f / maxIntensity;
 
@@ -211,4 +200,30 @@ void  Camera::createImage()
     }
 
     std::cout << "Image created from render results. Max intensity: " << maxIntensity << std::endl;
+}
+
+inline void  Camera::logProgress()
+{
+    static const auto  startTime = std::chrono::high_resolution_clock::now();
+    static auto        lastLog   = std::chrono::high_resolution_clock::now();
+
+    currentPixels++;
+    const auto  now = std::chrono::high_resolution_clock::now();
+
+    // Estimate time left
+    auto          elapsedTime       = std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count();
+    const double  percentageDone    = 100 * (currentPixels / (double)totalPixels);
+    const double  percentageLeft    = (100 - percentageDone);
+    long long     estimatedTimeLeft = (long long)llround((elapsedTime / percentageDone) * percentageLeft / 1000);
+
+    // Log once a while
+    const double  timeSinceLastLog = (double)std::chrono::duration_cast<std::chrono::milliseconds>(now - lastLog).count() / 1000;
+
+    if (timeSinceLastLog > LOG_PER_SEC)
+    {
+        lastLog = now;
+        long long  hours, mins, secs;
+        toHumanTime(estimatedTimeLeft, hours, mins, secs);
+        printf("\rProgress %.1lf%%. Estimated remaining %02lld: %02lld: %02lld.", percentageDone, hours, mins, secs);
+    }
 }

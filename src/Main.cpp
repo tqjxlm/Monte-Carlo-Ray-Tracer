@@ -1,5 +1,3 @@
-#pragma once
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -100,8 +98,8 @@ int  main()
     // Get render settings
     const unsigned int     PIXELS_W        = 1024;
     const unsigned int     PIXELS_H        = 1024;
-    const unsigned int     RAYS_PER_PIXEL  = 128;
-    const unsigned int     MAX_RAY_DEPTH   = 5;
+    const unsigned int     RAYS_PER_PIXEL  = 256;
+    const unsigned int     MAX_RAY_DEPTH   = 6;
     const PredefinedScene  predefinedScene = SCENE04;
 
     // Create scene
@@ -109,6 +107,10 @@ int  main()
 
     if (!loadScene(scene, predefinedScene))
     {
+        std::cout << "Error! Scene loading failed." << std::endl;
+        std::cout << "Press any key to exit.";
+        std::cin.get();
+
         return 1;
     }
 

@@ -33,6 +33,8 @@ public:
 private:
     void  createImage();
 
+    void  logProgress();
+
 private:
     unsigned int  width;
     unsigned int  height;
@@ -40,4 +42,8 @@ private:
     // Pixel containers.
     std::vector<std::vector<Pixel>>        pixels;
     std::vector<std::vector<glm::u8vec3>>  discretizedPixels;
+
+    // Progress
+    int  totalPixels;
+    int  currentPixels;
 };

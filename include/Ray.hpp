@@ -5,8 +5,8 @@
 struct Ray
 {
     Ray(glm::vec3 from, glm::vec3 direction):
-        origin(from),
         direction(direction),
+        origin(from),
         direction_inv(1.0f / direction),
         sign{direction_inv.x < 0, direction_inv.y < 0, direction_inv.z < 0}
     {

@@ -75,9 +75,9 @@ public:
     }
 
 private:
-    std::normal_distribution<float>  distribution;
     std::default_random_engine       generator;
     float                            min, max;
+    std::normal_distribution<float>  distribution;
 };
 
 // Returns a vector that is non-parallell to a given vector.
@@ -155,9 +155,8 @@ static inline glm::vec3  randomHemishpereSampleDirection(const glm::vec3 &n)
 static inline float  calculateSchlicksApproximation(const glm::vec3 &incomingDirection,
                                                     const glm::vec3 &normal, float n1 = 1.0f, float n2 = 1.0f)
 {
-    float      R0         = glm::pow((n1 - n2) / (n1 + n2), 2.0f);
-    glm::vec3  halfVector = glm::normalize(glm::reflect(incomingDirection, normal) + -incomingDirection);
-    float      alpha      = glm::dot(normal, halfVector);
+    float  R0    = glm::pow((n1 - n2) / (n1 + n2), 2.0f);
+    float  alpha = glm::dot(normal, -incomingDirection);
 
     return R0 + (1 - R0) * glm::pow((1 - alpha), 5.0f);
 }

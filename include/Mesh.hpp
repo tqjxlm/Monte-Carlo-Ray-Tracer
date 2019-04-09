@@ -39,10 +39,9 @@ public:
 
     ObjectIntersection  getIntersection(const Ray &ray) const
     {
-        float      t = 0, tmin = INFINITY;
-        glm::vec3  colour = glm::vec3();
-        long       index  = 0;
-        bool       hit    = node->hit(node, ray, t, tmin, index);
+        float  t = 0, tmin = INFINITY;
+        long   index = 0;
+        bool   hit   = node->hit(node, ray, t, tmin, index);
 
         return ObjectIntersection(hit, tmin, index);
     }

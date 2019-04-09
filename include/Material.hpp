@@ -11,22 +11,27 @@ public:
 
     bool  isEmissive() const
     {
-        return emissivity > std::numeric_limits<float>::min();
+        return emissivity > 0.0f;
     }
 
     bool  isTransparent() const
     {
-        return transparency > std::numeric_limits<float>::min();
+        return transparency > 0.0f;
     }
 
     bool  isSpecular() const
     {
-        return specularity > std::numeric_limits<float>::min();
+        return specularity > 0.0f;
     }
 
     bool  isReflective() const
     {
-        return reflectivity > std::numeric_limits<float>::min();
+        return reflectivity > 0.0f;
+    }
+
+    bool  isTotalTransparent() const
+    {
+        return fabs(transparency - 1.0f) < FLT_EPSILON;
     }
 
     virtual glm::vec3  getEmissionColor() const
@@ -46,15 +51,19 @@ public:
         const glm::vec3  half = glm::normalize(outDirection - inDirection);
         float            sqr  = glm::pow<float>(glm::dot(normal, half), specularExponent);
 
-        return glm::max(0.0f, sqr) * incomingRadiance;
+        return glm::max(0.0f, sqr) * incomingRadiance * specularity;
+    }
+
+    virtual ~Material()
+    {
     }
 
 protected:
     Material(float _emissivity   = 0.0f, float _reflectivity = 0.98f,
              float _transparency = 0.0f, float _refractiveIndex = 1.0f,
              float _specularity  = 0.0f, float _specularityExponent = 75.0f):
-        refractiveIndex(_refractiveIndex), transparency(_transparency),
-        emissivity(_emissivity), reflectivity(_reflectivity), specularity(_specularity), specularExponent(_specularityExponent)
+        refractiveIndex(_refractiveIndex), reflectivity(_reflectivity), transparency(_transparency),
+        emissivity(_emissivity), specularity(_specularity), specularExponent(_specularityExponent)
     {
     }
 };
@@ -64,7 +73,7 @@ class LambertianMaterial: public Material
 public:
     LambertianMaterial(glm::vec3 color, float emissivity = 0.0f, float reflectivity = 0.00f,
                        float transparency                = 0.0f, float refractiveIndex = 1.0f, float specularity = 0.0f, float specularExponent = 75.0f):
-        surfaceColor(color), Material(emissivity, reflectivity, transparency, refractiveIndex, specularity, specularExponent)
+        Material(emissivity, reflectivity, transparency, refractiveIndex, specularity, specularExponent), surfaceColor(color)
     {
     }
 

@@ -10,10 +10,6 @@
 Triangle::Triangle(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3, glm::vec3 _n1, glm::vec3 _n2, glm::vec3 _n3, int index):
     vertices{_v1, _v2, _v3}, normals{_n1, _n2, _n3}, edges{_v2 - _v1, _v3 - _v1}, meshIndex(index)
 {
-    const auto &v0 = vertices[0];
-    const auto &v1 = vertices[1];
-    const auto &v2 = vertices[2];
-
     v       = vertices[2] - vertices[0];
     u       = vertices[1] - vertices[0];
     uv      = glm::dot(u, v);
