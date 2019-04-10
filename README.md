@@ -4,7 +4,7 @@ A CPU renderer using Monte-Carlo ray tracing algorithm.
 
 It's a course assignment for Computer Graphics.
 
-Tested under Windows 10, Visual Studio 2015 x64, while it is theoretically cross-platform.
+Tested under Windows 10, Visual Studio 2015/2017 x64, while it is theoretically cross-platform.
 
 ## Features
 
@@ -13,14 +13,6 @@ Tested under Windows 10, Visual Studio 2015 x64, while it is theoretically cross
 * Acceleration: KDTree, OpenMP
 * Configurable: resolution, ray depth and ray density can be configured as needed
 
-### File Format
-
-__Notice__: an arbitrary obj model may not work for this project.
-
-The program can load simple obj models, but the *.mtl format has to be modified for use in global illumination:
-
-* Ka - reflection rate
-
 ### Dependencies
 
 * glm
@@ -28,7 +20,19 @@ The program can load simple obj models, but the *.mtl format has to be modified 
 
 All the dependencies above are head-only and already included in the repository.
 
-You may need to use another version of GLM if your building environment is different from mine (VS 2017 X64)
+ __Notice__: Due to an unknown bug, other versions of glm may not work with the code. Please use the provided one for now.
+
+### File Format
+
+The program can load simple obj models, but your mtl files may need modification to work. The following mtl properties are used:
+
+* Kd - surface color or light color
+* Ka - reflection rate (__different from the standard__)
+* Ks - specular intensity
+* Ke - emission intensity
+* Ns - specular index
+* d  - dissolve rate, i.e. opacity
+* Ni - refraction index
 
 ## Usage
 
@@ -42,7 +46,7 @@ If you find the result unsatisfying, just increment the RAYS_PER_PIXEL variable 
 
 ## Demos
 
-The following results are rendered with resolution of 1024 * 1024 and a maximum ray depth of 5.
+The following results are rendered with resolution of 1024 * 1024 and a maximum ray depth of 4.
 
 scene 0: 128 rays / pixel
 
@@ -52,14 +56,28 @@ scene 1: 1024 rays / pixel
 
 ![image not available](samples/scene1_1024.png)
 
-scene 2: 512 rays / pixel
+scene 2: 256 rays / pixel
 
 ![image not available](samples/scene2_256.png)
 
-scene 3: 128 rays / pixel
+scene 3: 256 rays / pixel
 
 ![image not available](samples/scene3_256.png)
 
 scene 4: 256 rays / pixel
 
 ![image not available](samples/scene4_256.png)
+
+## To Do
+
+There are several known issues that may be improved in the future.
+
+* Global BVH for acceleration.
+  * Currently a KDTree is applied only to mesh level
+* Light caching.
+  * Previously lighted point need not to be calculated twice
+* Use micro facet model instead of Blinn-Phong.
+* Apply Schlicks approximation to mirror reflection.
+* Unify mirror reflection and refraction.
+* Strange GLM problem.
+  * The latest version of GLM will ruin the whole program. Not sure why
