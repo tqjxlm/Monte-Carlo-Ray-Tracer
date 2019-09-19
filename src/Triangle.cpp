@@ -7,8 +7,9 @@
 
 #include "Math.hpp"
 
-Triangle::Triangle(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3, glm::vec3 _n1, glm::vec3 _n2, glm::vec3 _n3, int index):
-    vertices{_v1, _v2, _v3}, normals{_n1, _n2, _n3}, edges{_v2 - _v1, _v3 - _v1}, meshIndex(index)
+Triangle::Triangle(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3,
+                   glm::vec3 n1, glm::vec3 n2, glm::vec3 n3, int index)
+    : vertices{v1, v2, v3}, normals{n1, n2, n3}, edges{v2 - v1, v3 - v1}, meshIndex(index)
 {
     v       = vertices[2] - vertices[0];
     u       = vertices[1] - vertices[0];
@@ -17,22 +18,23 @@ Triangle::Triangle(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3, glm::vec3 _n1, g
     uu      = glm::dot(u, u);
     fractor = uv * uv - uu * vv;
 
-    if ((abs(glm::dot(_n1, _n2) - 1.0f) < std::numeric_limits<float>::min()) && (abs(glm::dot(_n2, _n3)) - 1.0f < std::numeric_limits<float>::min()))
+    if ((abs(glm::dot(n1, n2) - 1.0f) < std::numeric_limits<float>::min()) &&
+        (abs(glm::dot(n2, n3)) - 1.0f < std::numeric_limits<float>::min()))
     {
-        faceNorm = glm::normalize((_n1 + _n2 + _n3) / 3.0f);
+        faceNorm = glm::normalize((n1 + n2 + n3) / 3.0f);
         flat     = true;
     }
-    else if ((_n1 == glm::vec3()) || (_n2 == glm::vec3()) || (_n3 == glm::vec3()))
+    else if ((n1 == glm::vec3()) || (n2 == glm::vec3()) || (n3 == glm::vec3()))
     {
         flat     = true;
-        faceNorm = Math::calcNormal(_v1, _v2, _v3);
+        faceNorm = Math::calcNormal(v1, v2, v3);
     }
     else
     {
         flat     = false;
-        faceNorm = Math::calcNormal(_v1, _v2, _v3);
+        faceNorm = Math::calcNormal(v1, v2, v3);
 
-        for (auto &norm : normals)
+        for (auto& norm : normals)
         {
             if (glm::dot(faceNorm, norm) < 0.0f)
             {
@@ -42,12 +44,12 @@ Triangle::Triangle(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3, glm::vec3 _n1, g
     }
 }
 
-glm::vec3  Triangle::getRandomPositionOnSurface() const
+glm::vec3 Triangle::getRandomPositionOnSurface() const
 {
-    glm::vec3  v1                       = vertices[1] - vertices[0];
-    glm::vec3  v2                       = vertices[2] - vertices[0];
-    glm::vec3  randomRectanglePoint     = (rand() / (float)RAND_MAX) * v1 + (rand() / (float)RAND_MAX) * v2;
-    glm::vec3  pointProjectedOnV1V2Line = glm::closestPointOnLine(randomRectanglePoint, v1, v2);
+    glm::vec3 v1                       = vertices[1] - vertices[0];
+    glm::vec3 v2                       = vertices[2] - vertices[0];
+    glm::vec3 randomRectanglePoint     = (rand() / (float)RAND_MAX) * v1 + (rand() / (float)RAND_MAX) * v2;
+    glm::vec3 pointProjectedOnV1V2Line = glm::closestPointOnLine(randomRectanglePoint, v1, v2);
 
     // If its further to the random point than to the line point then we're outside the triangle
     if (glm::length(randomRectanglePoint) > glm::length(pointProjectedOnV1V2Line))
@@ -59,31 +61,31 @@ glm::vec3  Triangle::getRandomPositionOnSurface() const
     return vertices[0] + randomRectanglePoint;
 }
 
-bool  Triangle::rayIntersection(const Ray &ray, float &intersectionDistance) const
+bool Triangle::rayIntersection(const Ray& ray, float& intersectedDistance) const
 {
-    // Calculate intersection using barycentric coordinates. This gives a equation system
-    // which we can solve using Cramer's rule.
-    const glm::vec3  E1      = vertices[1] - vertices[0];
-    const glm::vec3  E2      = vertices[2] - vertices[0];
-    const glm::vec3  P       = glm::cross(ray.direction, E2);
-    const glm::vec3  T       = ray.origin - vertices[0];
-    const float      inv_den = 1.0f / glm::dot(E1, P);
-    float            u       = inv_den * glm::dot(T, P);
+    // Calculate intersection using barycentric coordinates
+    // This gives a equation system which we can solve using Cramer's rule
+    const glm::vec3 E1      = vertices[1] - vertices[0];
+    const glm::vec3 E2      = vertices[2] - vertices[0];
+    const glm::vec3 P       = glm::cross(ray.direction, E2);
+    const glm::vec3 T       = ray.origin - vertices[0];
+    const float     inv_den = 1.0f / glm::dot(E1, P);
+    float u                 = inv_den * glm::dot(T, P);
 
     if ((u < 0.0f) || (u > 1.0f))
     {
-        return false; // Didn't hit.
+        return false;
     }
 
-    const glm::vec3  Q = glm::cross(T, E1);
-    const float      v = inv_den * glm::dot(ray.direction, Q);
+    const glm::vec3 Q = glm::cross(T, E1);
+    const float     v = inv_den * glm::dot(ray.direction, Q);
 
     if ((v < 0.0f) || (u + v > 1.0f))
     {
-        return false; // Didn't hit.
+        return false;
     }
 
-    intersectionDistance = inv_den * glm::dot(E2, Q);
+    intersectedDistance = inv_den * glm::dot(E2, Q);
 
-    return intersectionDistance > std::numeric_limits<float>::min();
+    return intersectedDistance > std::numeric_limits<float>::min();
 }

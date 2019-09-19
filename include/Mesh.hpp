@@ -12,46 +12,45 @@ class Renderer;
 
 struct ObjectIntersection
 {
-    bool   hit; // If there was an intersection
-    float  dist; // Distance to intersection along ray
-    long   index; // Hit triangle index
+    bool  hit;   // If there was an intersection
+    float dist;  // Distance to intersection along ray
+    long  index; // Hit triangle index
 
-    ObjectIntersection(bool hit_ = false, float dist_ = 0, long index_ = 0):
+    ObjectIntersection(bool hit_ = false, float dist_ = 0, long index_ = 0) :
         hit(hit_), dist(dist_), index(index_)
-    {
-    }
+    {}
 };
 
-class Mesh
-{
+class Mesh {
 public:
-    Mesh(Material *mat):
-        material(mat)
-    {
-    }
 
-    glm::vec3  getRandomPositionOnSurface() const
+    Mesh(Material* mat) :
+        material(mat)
+    {}
+
+    glm::vec3 getRandomPositionOnSurface() const
     {
-        const auto  triangle = triangles[rand() % triangles.size()];
+        const auto triangle = triangles[rand() % triangles.size()];
 
         return triangle->getRandomPositionOnSurface();
     }
 
-    ObjectIntersection  getIntersection(const Ray &ray) const
+    ObjectIntersection getIntersection(const Ray& ray) const
     {
-        float  t = 0, tmin = INFINITY;
-        long   index = 0;
-        bool   hit   = node->hit(node, ray, t, tmin, index);
+        float t = 0, tmin = INFINITY;
+        long  index = 0;
+        bool  hit   = node->hit(node, ray, t, tmin, index);
 
         return ObjectIntersection(hit, tmin, index);
     }
 
 private:
-    bool                     enabled = true;
-    bool                     convex  = true;
-    Material                *material;
-    std::vector<Triangle *>  triangles;
-    KDNode                  *node;
+
+    bool enabled = true;
+    bool convex  = true;
+    Material* material;
+    std::vector<Triangle *>triangles;
+    KDNode* node;
 
     friend Scene;
     friend Renderer;

@@ -10,16 +10,15 @@
 #include "Mesh.hpp"
 #include "Triangle.h"
 
-class Scene
-{
+class Scene {
 public:
+
     Scene()
-    {
-    }
+    {}
 
     ~Scene()
     {
-        for (auto &rg : renderGroups)
+        for (auto& rg : renderGroups)
         {
             for (auto triangle : rg.triangles)
             {
@@ -33,10 +32,10 @@ public:
         }
     }
 
-    void  initialize()
+    void initialize()
     {
         // Pre-store all emissive materials in a separate vector.
-        for (auto &rg : renderGroups)
+        for (auto& rg : renderGroups)
         {
             if (rg.material->isEmissive())
             {
@@ -45,38 +44,47 @@ public:
         }
     }
 
-    const Mesh & getRenderGroup(unsigned renderGroupIndex) const
+    const Mesh& getRenderGroup(unsigned renderGroupIndex) const
     {
         return renderGroups[renderGroupIndex];
     }
 
-    const Triangle & getTriangle(unsigned int renderGroupIndex, unsigned int index) const
+    const Triangle& getTriangle(unsigned int renderGroupIndex, unsigned int index) const
     {
         return *(renderGroups[renderGroupIndex].triangles[index]);
     }
 
-    const std::vector<Mesh *> & getEmissiveMeshes() const
+    const std::vector<Mesh *>& getEmissiveMeshes() const
     {
         return emissiveMesh;
     }
 
     // Casts a ray through the scene. Save the closest intersection.
-    bool  rayCast(const Ray &ray, unsigned int &intersectionRenderGroupIndex,
-                  unsigned int &intersectionTriangleIndex, float &intersectionDistance) const;
+    bool rayCast(const Ray   & ray,
+                 unsigned int& intersectionRenderGroupIndex,
+                 unsigned int& intersectionTriangleIndex,
+                 float       & intersectionDistance) const;
 
-    // Casts a ray through a given render group. Returns true if there was an intersection.
-    bool  renderGroupRayCast(const Ray &ray, unsigned int renderGroupIndex,
-                             unsigned int &intersectionTriangleIndex, float &intersectionDistance) const;
+    // Casts a ray through a given render group
+    // Returns true if there was an intersection
+    bool renderGroupRayCast(const Ray   & ray,
+                            unsigned int  renderGroupIndex,
+                            unsigned int& intersectedTriangleID,
+                            float       & intersectedDistance) const;
 
-    void  addObj(std::string filePath,
-                 glm::vec3 translate = glm::vec3(), glm::vec3 rotate = glm::vec3(), glm::vec3 scale = glm::vec3(1.0f));
+    void addObj(std::string filePath,
+                glm::vec3   translate = glm::vec3(),
+                glm::vec3   rotate    = glm::vec3(),
+                glm::vec3   scale     = glm::vec3(1.0f));
 
-    void  addMesh(const tinyobj::attrib_t &attrib,
-                  const tinyobj::mesh_t &mesh, const std::vector<tinyobj::material_t> &materials,
-                  const glm::mat4 &modelMatrix = glm::mat4());
+    void addMesh(const tinyobj::attrib_t               & attrib,
+                 const tinyobj::mesh_t                 & mesh,
+                 const std::vector<tinyobj::material_t>& materials,
+                 const glm::mat4                       & modelMatrix = glm::mat4());
 
 private:
-    std::vector<Mesh>        renderGroups;
-    std::vector<Material *>  materials;
-    std::vector<Mesh *>      emissiveMesh;
+
+    std::vector<Mesh>renderGroups;
+    std::vector<Material *>materials;
+    std::vector<Mesh *>emissiveMesh;
 };

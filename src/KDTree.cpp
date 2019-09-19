@@ -3,17 +3,11 @@
 #include "KDTree.h"
 
 // Build KD tree for tris
-KDNode * KDNode::build(std::vector<Triangle *> &tris, int depth)
+KDNode * KDNode::build(std::vector<Triangle *>& tris, int depth)
 {
-    KDNode *node = new KDNode();
+    KDNode* node = new KDNode();
 
-    node->leaf      = false;
-    node->triangles = std::vector<Triangle *>();
-    node->left      = nullptr;
-    node->right     = nullptr;
-    node->box       = AABB();
-
-    if (tris.size() == 0) { return node; }
+    if (tris.size() == 0) return node;
 
     if ((depth > 25) || (tris.size() <= 6))
     {
@@ -26,17 +20,15 @@ KDNode * KDNode::build(std::vector<Triangle *> &tris, int depth)
             node->box.expand(tris[i]->getBoundingBox());
         }
 
-        node->left             = new KDNode();
-        node->right            = new KDNode();
-        node->left->triangles  = std::vector<Triangle *>();
-        node->right->triangles = std::vector<Triangle *>();
+        node->left  = new KDNode();
+        node->right = new KDNode();
 
         return node;
     }
 
     node->box = tris[0]->getBoundingBox();
-    glm::vec3  midpt     = glm::vec3();
-    float      tris_recp = 1.0f / tris.size();
+    glm::vec3 midpt     = glm::vec3();
+    float     tris_recp = 1.0f / tris.size();
 
     for (long i = 1; i < tris.size(); i++)
     {
@@ -44,22 +36,30 @@ KDNode * KDNode::build(std::vector<Triangle *> &tris, int depth)
         midpt = midpt + (tris[i]->getCenter() * tris_recp);
     }
 
-    std::vector<Triangle *>  left_tris;
-    std::vector<Triangle *>  right_tris;
-    int                      axis = node->box.get_longest_axis();
+    std::vector<Triangle *> left_tris;
+    std::vector<Triangle *> right_tris;
+    int axis = node->box.get_longest_axis();
 
     for (auto tri : tris)
     {
         switch (axis)
         {
         case 0:
-            midpt.x >= tri->getCenter().x ? right_tris.push_back(tri) : left_tris.push_back(tri);
+            midpt.x >= tri->getCenter().x
+            ? right_tris.push_back(tri)
+            : left_tris.push_back(tri);
             break;
+
         case 1:
-            midpt.y >= tri->getCenter().y ? right_tris.push_back(tri) : left_tris.push_back(tri);
+            midpt.y >= tri->getCenter().y
+            ? right_tris.push_back(tri)
+            : left_tris.push_back(tri);
             break;
+
         case 2:
-            midpt.z >= tri->getCenter().z ? right_tris.push_back(tri) : left_tris.push_back(tri);
+            midpt.z >= tri->getCenter().z
+            ? right_tris.push_back(tri)
+            : left_tris.push_back(tri);
             break;
         }
     }
@@ -90,17 +90,17 @@ KDNode * KDNode::build(std::vector<Triangle *> &tris, int depth)
 }
 
 // Finds nearest triangle in kd tree that intersects with ray.
-bool  KDNode::hit(KDNode *node, const Ray &ray, float &t, float &tmin, long &tri_idx)
+bool KDNode::hit(KDNode* node, const Ray& ray, float& t, float& tmin, long& tri_idx)
 {
-    float  dist;
+    float dist;
 
     if (node->box.intersection(ray, dist))
     {
-        if (dist > tmin) { return false; }
+        if (dist > tmin) return false;
 
-        bool  hit_tri   = false;
-        bool  hit_left  = false;
-        bool  hit_right = false;
+        bool hit_tri   = false;
+        bool hit_left  = false;
+        bool hit_right = false;
 
         if (!node->leaf)
         {
@@ -111,7 +111,7 @@ bool  KDNode::hit(KDNode *node, const Ray &ray, float &t, float &tmin, long &tri
         }
         else
         {
-            auto  triangles_size = node->triangles.size();
+            auto triangles_size = node->triangles.size();
 
             for (size_t i = 0; i < triangles_size; i++)
             {

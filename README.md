@@ -36,11 +36,21 @@ The program can load simple obj models, but your mtl files may need modification
 
 ## Usage
 
-* Use CMake (3.9+) to configure the project
-* Modify the render settings in Main.cpp
-* Compile
-* Run and wait (patience!)
-* The output image will be at the working directory, i.e. the build directory specified in CMake
+### Build
+
+1. Use CMake (3.9+) to configure the project
+2. Compile (use release build, unless there're run time issues)
+
+### Run
+
+* Arguments:
+  * -s, --scene: scene ID (1-4), default 1
+  * -d, --depth: ray depth, default 4
+  * -r, --ray:   ray sample per pixel, default 4
+  * -p, --pixel: image size, default 1024
+* If running in Visual Studio, specify command line arguments in Debug Settings
+* If running directly from the command line, please make sure the "resources" folder is in the same directory with the executive
+* The output image will be at the working directory, i.e. the build directory specified in CMake or the executive directory
 
 If you find the result unsatisfying, just increment the RAYS_PER_PIXEL variable in Main.cpp. You'll wait much longer for a better result.
 
@@ -72,12 +82,9 @@ scene 4: 256 rays / pixel
 
 There are several known issues that may be improved in the future.
 
-* Global BVH for acceleration.
-  * Currently a KDTree is applied only to mesh level
-* Light caching.
-  * Previously lighted point need not to be calculated twice
-* Use micro facet model instead of Blinn-Phong.
-* Apply Schlicks approximation to mirror reflection.
-* Unify mirror reflection and refraction.
-* Strange GLM problem.
+* BVH.
+* Caching.
+* PBR.
+* Micro facet model.
+* Fix the GLM version issue.
   * The latest version of GLM will ruin the whole program. Not sure why

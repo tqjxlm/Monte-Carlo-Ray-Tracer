@@ -7,23 +7,33 @@
 #include "Ray.hpp"
 #include "AABB.hpp"
 
-class KDNode
-{
+class KDNode {
 public:
-    KDNode()
-    {
-    }
 
-    KDNode* build(std::vector<Triangle *> &tris, int depth);
+    KDNode() :
+        leaf(false),
+        triangles(std::vector<Triangle *>()),
+        left(nullptr),
+        right(nullptr),
+        box(AABB())
+    {}
 
-    bool    hit(KDNode *node, const Ray &ray, float &t, float &tmin, long &tri_idx);
+    KDNode* build(std::vector<Triangle *>& tris,
+                  int                      depth);
+
+    bool    hit(KDNode   * node,
+                const Ray& ray,
+                float    & t,
+                float    & tmin,
+                long     & tri_idx);
 
 private:
-    AABB                     box;
-    KDNode                  *left;
-    KDNode                  *right;
-    std::vector<Triangle *>  triangles;
-    bool                     leaf;
+
+    AABB box;
+    KDNode* left;
+    KDNode* right;
+    std::vector<Triangle *>triangles;
+    bool leaf;
 };
 
 #endif // KDTREE_H

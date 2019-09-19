@@ -4,14 +4,12 @@
 
 #include "Math.hpp"
 
-static const float  RAY_EPSILON = 0.001f;
+static const float RAY_EPSILON = 0.001f;
 
-Renderer::Renderer(const Scene &_scene, const unsigned int maxDepth):
-    maxDepth(maxDepth), scene(_scene)
-{
-}
+Renderer::Renderer(const Scene& _scene, const unsigned int maxDepth) : maxDepth(maxDepth), scene(_scene)
+{}
 
-glm::vec3  Renderer::traceRay(const Ray &_ray, const unsigned int currentDepth) const
+glm::vec3 Renderer::traceRay(const Ray& _ray, const unsigned int currentDepth) const
 {
     if (currentDepth == maxDepth)
     {
@@ -19,12 +17,12 @@ glm::vec3  Renderer::traceRay(const Ray &_ray, const unsigned int currentDepth) 
     }
 
     // Epsilon: avoid self intersection
-    Ray  ray(_ray.origin + RAY_EPSILON * _ray.direction, _ray.direction);
+    Ray ray(_ray.origin + RAY_EPSILON * _ray.direction, _ray.direction);
 
     // See if our current ray hits anything in the scene
-    float         intersectionDistance;
-    unsigned int  intersectionTriangleIndex, intersectionRenderGroupIndex;
-    const bool    intersectionFound = scene.rayCast(ray, intersectionRenderGroupIndex, intersectionTriangleIndex, intersectionDistance);
+    float intersectedDistance;
+    unsigned int intersectedTriangleID, intersectedGroupID;
+    const bool   intersectionFound = scene.rayCast(ray, intersectedGroupID, intersectedTriangleID, intersectedDistance);
 
     // If the ray doesn't intersect, simply return (0, 0, 0)
     if (!intersectionFound)
@@ -33,12 +31,12 @@ glm::vec3  Renderer::traceRay(const Ray &_ray, const unsigned int currentDepth) 
     }
 
     // Calculate intersection point.
-    const glm::vec3  intersectionPoint = ray.origin + ray.direction * intersectionDistance;
+    const glm::vec3 intersectedPoint = ray.origin + ray.direction * intersectedDistance;
 
     // Retrieve primitive information for the intersected object
-    const auto      &intersectionRenderGroup = scene.getRenderGroup(intersectionRenderGroupIndex);
-    const auto       intersectionTriangle    = intersectionRenderGroup.triangles[intersectionTriangleIndex];
-    const glm::vec3  hitNormal               = intersectionTriangle->getNormal(intersectionPoint);
+    const auto& intersectedGroup    = scene.getRenderGroup(intersectedGroupID);
+    const auto  intersectedTriangle = intersectedGroup.triangles[intersectedTriangleID];
+    const glm::vec3 hitNormal       = intersectedTriangle->getNormal(intersectedPoint);
 
     // Back face culling
     if (glm::dot(-ray.direction, hitNormal) < std::numeric_limits<float>::min())
@@ -46,16 +44,18 @@ glm::vec3  Renderer::traceRay(const Ray &_ray, const unsigned int currentDepth) 
         return glm::vec3(0);
     }
 
-    // Retrieve the intersected surface's material.
-    const Material * const  hitMaterial = intersectionRenderGroup.material;
+    // Retrieve the intersected surface's material
+    const Material * const hitMaterial = intersectedGroup.material;
 
     // Emissive lighting (ending point for any tracing path)
     if (hitMaterial->isEmissive())
     {
         if (currentDepth == 0)
         {
-            // Since we add a direct light every tracing, we should complement the light source to balance the overall radiance
-            return hitMaterial->getEmissionColor() + glm::dot(-ray.direction, hitNormal) * hitMaterial->getEmissionColor();
+            // Since we use explicit light sampling later, we should add an
+            // additional emissive light in this case
+            return hitMaterial->getEmissionColor() +
+                   glm::dot(-ray.direction, hitNormal) * hitMaterial->getEmissionColor();
         }
         else
         {
@@ -64,41 +64,42 @@ glm::vec3  Renderer::traceRay(const Ray &_ray, const unsigned int currentDepth) 
     }
 
     // Initialize color accumulator
-    glm::vec3  colorAccumulator = glm::vec3(0);
-    bool       shouldDiffuse    = !hitMaterial->isReflective() && !hitMaterial->isTotalTransparent();
+    glm::vec3 colorAccumulator = glm::vec3(0);
+    bool shouldDiffuse         = !hitMaterial->isTotalReflective() && !hitMaterial->isTotalTransparent();
 
-    // Direct lighting
-    // Note: In rendering equation there's nothing like a "direct lighting",
-    // but the radiance is too sparse if we rely solely on Monte-Carlo to reach a light source.
-    // It just turns out working.
+    // Explicit light sampling
+    // https://computergraphics.stackexchange.com/questions/5152/progressive-path-tracing-with-explicit-light-sampling
     if (shouldDiffuse)
     {
-        for (Mesh *lightSource : scene.getEmissiveMeshes())
+        for (Mesh* lightSource : scene.getEmissiveMeshes())
         {
             // Create a shadow ray
-            const glm::vec3  randomLightSurfacePosition = lightSource->getRandomPositionOnSurface();
-            const glm::vec3  shadowRayDirection         = glm::normalize(randomLightSurfacePosition - intersectionPoint);
+            const glm::vec3 randomLightSurfacePosition = lightSource->getRandomPositionOnSurface();
+            const glm::vec3 shadowRayDirection         = glm::normalize(randomLightSurfacePosition - intersectedPoint);
 
             if (glm::dot(shadowRayDirection, hitNormal) < std::numeric_limits<float>::min())
             {
                 continue;
             }
 
-            const Ray  shadowRay(intersectionPoint + hitNormal * RAY_EPSILON, shadowRayDirection);
+            const Ray shadowRay(intersectedPoint + hitNormal * RAY_EPSILON,
+                                shadowRayDirection);
 
             // Cast the shadow ray towards the light source
-            unsigned int  shadowMeshIndex, shadowRayTriangleIndex;
+            unsigned int shadowMeshIndex, shadowRayTriangleIndex;
 
-            if (scene.rayCast(shadowRay, shadowMeshIndex, shadowRayTriangleIndex, intersectionDistance))
+            if (scene.rayCast(shadowRay, shadowMeshIndex, shadowRayTriangleIndex, intersectedDistance))
             {
-                const auto &renderGroup = scene.getRenderGroup(shadowMeshIndex);
+                const auto& renderGroup = scene.getRenderGroup(shadowMeshIndex);
 
                 if (&renderGroup == lightSource)
                 {
-                    // We hit the light. Add it's contribution to the color accumulator.
-                    const Triangle  *lightTriangle = renderGroup.triangles[shadowRayTriangleIndex];
-                    const glm::vec3  lightNormal   = lightTriangle->getNormal(shadowRay.origin + intersectionDistance * shadowRay.direction);
-                    float            lightFactor   = glm::dot(-shadowRay.direction, lightNormal);
+                    // We hit the light. Add it's contribution to the color
+                    // accumulator.
+                    const Triangle* lightTriangle = renderGroup.triangles[shadowRayTriangleIndex];
+                    const glm::vec3 lightNormal   = lightTriangle->getNormal(
+                        shadowRay.origin + intersectedDistance * shadowRay.direction);
+                    float lightFactor = glm::dot(-shadowRay.direction, lightNormal);
 
                     if (lightFactor < std::numeric_limits<float>::min())
                     {
@@ -106,13 +107,18 @@ glm::vec3  Renderer::traceRay(const Ray &_ray, const unsigned int currentDepth) 
                     }
 
                     // Direct diffuse lighting.
-                    const glm::vec3  radiance = lightFactor * lightSource->material->getEmissionColor();
-                    colorAccumulator += hitMaterial->calculateDiffuseLighting(-shadowRay.direction, -ray.direction, hitNormal, radiance);
+                    const glm::vec3 radiance = lightFactor * lightSource->material->getEmissionColor();
+                    colorAccumulator += hitMaterial->calcDiffuseLighting(
+                        -shadowRay.direction, -ray.direction, hitNormal, radiance);
 
                     // Specular lighting.
                     if (hitMaterial->isSpecular())
                     {
-                        colorAccumulator += hitMaterial->calculateSpecularLighting(-shadowRay.direction, -ray.direction, hitNormal, radiance);
+                        colorAccumulator += hitMaterial->calcSpecularLighting(
+                            -shadowRay.direction,
+                            -ray.direction,
+                            hitNormal,
+                            radiance);
                     }
                 }
             }
@@ -122,63 +128,72 @@ glm::vec3  Renderer::traceRay(const Ray &_ray, const unsigned int currentDepth) 
         colorAccumulator /= glm::max<float>(1.0f, (float)scene.getEmissiveMeshes().size());
     }
 
-    // Indirect lighting (diffuse lighting)
+    // Indirect lighting (diffuse light)
     if (shouldDiffuse)
     {
-        // Shoot rays and integrate diffuse lighting based on BRDF to compute indirect lighting.
-        const glm::vec3  reflectionDirection = Math::cosineWeightedHemisphereSampleDirection(hitNormal);
-        const Ray        diffuseRay(intersectionPoint + hitNormal * RAY_EPSILON, reflectionDirection);
-        const auto       incomingRadiance = traceRay(diffuseRay, currentDepth + 1);
-        colorAccumulator += hitMaterial->calculateDiffuseLighting(-diffuseRay.direction, -ray.direction, hitNormal, incomingRadiance);
+        // Shoot rays and integrate diffuse lighting based on BRDF to compute
+        // indirect lighting.
+        const glm::vec3 reflectionDirection = Math::sampleHemisphereWeighted(hitNormal);
+        const Ray  diffuseRay(intersectedPoint + hitNormal * RAY_EPSILON, reflectionDirection);
+        const auto incomingRadiance = traceRay(diffuseRay, currentDepth + 1);
+        colorAccumulator += hitMaterial->calcDiffuseLighting(
+            -diffuseRay.direction, -ray.direction,
+            hitNormal, incomingRadiance);
 
         // Color blending when material is reflective or transparent
         colorAccumulator *= (1.0f - hitMaterial->reflectivity) * (1.0f - hitMaterial->transparency);
     }
 
-    // TODO: reflection and refraction should be handled as the same process
-
-    // Mirror reflective lighting
-    if (hitMaterial->isReflective())
+    // Reflected light only
+    if (hitMaterial->isTotalReflective())
     {
-        // TODO: reflection should also apply SchlicksApproximation
-        Ray  reflectedRay(intersectionPoint + hitNormal * RAY_EPSILON, glm::reflect(ray.direction, hitNormal));
+        const glm::vec3 direction = glm::reflect(ray.direction, hitNormal);
+        Ray reflectedRay(intersectedPoint + hitNormal * RAY_EPSILON, direction);
         colorAccumulator += hitMaterial->reflectivity * traceRay(reflectedRay, currentDepth + 1);
     }
-    // Refracted lighting
+
+    // Refracted light + reflected light
     else if (hitMaterial->isTransparent())
     {
-        const float  n1                     = 1.0f;
-        const float  n2                     = hitMaterial->refractiveIndex;
-        const float  schlickConstantOutside = Math::calculateSchlicksApproximation(ray.direction, hitNormal, n1, n2);
-        Ray          refractedRay(intersectionPoint - hitNormal * RAY_EPSILON, glm::refract(ray.direction, hitNormal, n1 / n2));
+        // Schick approximation is used to determine how much light is refracted or reflected
+        const float n1                     = 1.0f;
+        const float n2                     = hitMaterial->refractiveIndex;
+        const float schlickConstantOutside = Math::schlicksApprox(ray.direction, hitNormal, n1, n2);
+        Ray refractedRay(intersectedPoint - hitNormal * RAY_EPSILON, glm::refract(ray.direction, hitNormal, n1 / n2));
+        const float fRefracted = (1.0f - schlickConstantOutside) * hitMaterial->transparency;
 
-        if (scene.renderGroupRayCast(refractedRay, intersectionRenderGroupIndex, intersectionTriangleIndex, intersectionDistance))
+        if (scene.renderGroupRayCast(refractedRay, intersectedGroupID,
+                                     intersectedTriangleID, intersectedDistance))
         {
-            // Self-intersected, cast ray from the other point to the outer world and do refrection twice
-            const auto      &refractedRayHitTriangle    = intersectionRenderGroup.triangles[intersectionTriangleIndex];
-            const glm::vec3  refractedIntersectionPoint = refractedRay.origin + refractedRay.direction * intersectionDistance;
-            const glm::vec3  refractedHitNormal         = refractedRayHitTriangle->getNormal(refractedIntersectionPoint);
-            float            schlickConstantInside      = Math::calculateSchlicksApproximation(refractedRay.direction, -refractedHitNormal, n2, n1);
-            Ray              refractedRayOut(refractedIntersectionPoint + RAY_EPSILON * refractedHitNormal,
-                                             glm::refract(refractedRay.direction, -refractedHitNormal, n2 / n1));
-            const float  f1 = (1.0f - schlickConstantOutside) * (hitMaterial->transparency);
-            const float  f2 = (1.0f - schlickConstantInside);
+            // Self-intersected, cast ray from the exit point to the outer world and do refrection twice
+            const auto& refractedRayHitTriangle = intersectedGroup.triangles[intersectedTriangleID];
+            const glm::vec3 refractedPoint      = refractedRay.origin + refractedRay.direction * intersectedDistance;
+            const glm::vec3 refractedHitNormal  = refractedRayHitTriangle->getNormal(refractedPoint);
+            float schlickConstantInside         = Math::schlicksApprox(refractedRay.direction,
+                                                                       -refractedHitNormal,
+                                                                       n2,
+                                                                       n1);
+
+            const glm::vec3 direction = glm::refract(refractedRay.direction, -refractedHitNormal, n2 / n1);
+            Ray refractedRayOut(refractedPoint + RAY_EPSILON * refractedHitNormal, direction);
+            const float fRefractedIn = (1.0f - schlickConstantInside);
 
             // Don't increase depth for refracted rays
-            const auto  incomingRadiance = f2 * traceRay(refractedRayOut, currentDepth);
-            colorAccumulator += f1 * hitMaterial->calculateDiffuseLighting(refractedRay.direction, -ray.direction, hitNormal, incomingRadiance);
+            auto incomingRadiance = fRefractedIn * traceRay(refractedRayOut, currentDepth);
+            colorAccumulator += fRefracted * hitMaterial->calcDiffuseLighting(
+                refractedRay.direction, -ray.direction, hitNormal, incomingRadiance);
         }
         else
         {
             // Not self-intersected, refract only once
-            colorAccumulator += (1.0f - schlickConstantOutside) * (hitMaterial->transparency) * traceRay(refractedRay, currentDepth + 1);
+            colorAccumulator += fRefracted * traceRay(refractedRay, currentDepth + 1);
         }
 
         // The remaining ray is reflected
-        Ray          specularRay(intersectionPoint + hitNormal * RAY_EPSILON, glm::reflect(ray.direction, hitNormal));
-        auto         reflected = traceRay(specularRay, currentDepth + 1);
-        const float  sf        = schlickConstantOutside;
-        colorAccumulator += sf * reflected;
+        auto outDirection = glm::reflect(ray.direction, hitNormal);
+        Ray  specularRay(intersectedPoint + hitNormal * RAY_EPSILON, outDirection);
+        const float fReflected = schlickConstantOutside * hitMaterial->transparency;
+        colorAccumulator += fReflected * traceRay(specularRay, currentDepth + 1);
     }
 
     return colorAccumulator;

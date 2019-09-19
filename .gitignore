@@ -410,3 +410,4 @@ ASALocalRun/
 !resources/**/*
 !thirdparty/**/*
 *.tga
+.vscode/
