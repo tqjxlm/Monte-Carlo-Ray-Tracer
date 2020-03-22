@@ -1,3 +1,34 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:d69294c421e7920bb0a0d1986333afcaf0e4c7f24b561ec6f1f6061b2cbc9a89
-size 385
+newmtl plain
+illum 4
+Kd 0.10 0.10 0.10
+Ks 1.00 1.00 1.00
+Ns 40
+
+newmtl light
+illum 4
+Kd 1.00 1.00 1.00
+Ke 1.00 1.00 1.00
+
+newmtl board1
+illum 4
+Kd 0.40 0.40 0.40
+Ks 1.00 1.00 1.00
+Ns 100
+
+newmtl board2
+illum 4
+Kd 0.40 0.40 0.40
+Ks 1.00 1.00 1.00
+Ns 200
+
+newmtl board3
+illum 4
+Kd 0.40 0.40 0.40
+Ks 1.00 1.00 1.00
+Ns 500
+
+newmtl board4
+illum 4
+Kd 0.40 0.40 0.40
+Ks 1.00 1.00 1.00
+Ns 1000

@@ -3,6 +3,7 @@
 #include <random>
 #include <cassert>
 #include <iostream>
+#include <sstream>
 #include <numeric>
 #include <algorithm>
 #include <string>
@@ -162,15 +163,16 @@ static inline float schlicksApprox(
 // Returns a string that represents the current date and time
 static inline std::string currentDateTime()
 {
-    auto now = time(0);
-    struct tm tstruct;
+    std::time_t t = std::time(0);   // get time now
+    std::tm* now = std::localtime(&t);
+    std::stringstream date;
+    date << (now->tm_year + 1900) << '-' 
+         << (now->tm_mon + 1) << '-'
+         <<  now->tm_mday << '-'
+         << now->tm_hour << '_'
+         << now->tm_min << '_'
+         << now->tm_sec;
 
-    localtime_s(&tstruct, &now);
-    std::string date = std::to_string(tstruct.tm_year) + "-" + std::to_string(tstruct.tm_mon) + "-" + std::to_string(
-        tstruct.tm_mday);
-    std::string time = std::to_string(tstruct.tm_hour) + "-" + std::to_string(tstruct.tm_min) + "-" + std::to_string(
-        tstruct.tm_sec);
-
-    return date + "___" + time;
+    return date.str();
 }
 } // namespace Math

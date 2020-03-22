@@ -114,8 +114,7 @@ public:
     override
     {
         glm::vec3 half = glm::normalize(outDirection - inDirection);
-        float     sqr  = glm::pow<float>(glm::dot(normal, half),
-                                         specularExponent);
+        float     sqr  = glm::pow(glm::dot(normal, half), specularExponent);
 
         return glm::max(0.0f, sqr) * incomingRadiance * specularity;
     }

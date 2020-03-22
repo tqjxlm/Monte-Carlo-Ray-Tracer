@@ -153,6 +153,7 @@ bool Camera::writeImageTGA(const std::string path) const
         }
     }
 
+    o.flush();
     o.close();
 
     return true;

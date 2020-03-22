@@ -1,3 +1,38 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:3dd4f2db1311fa63df756a9b6d6216c49e24908fa22ddce9c7f1711ecd5f92cf
-size 415
+newmtl refract_ball
+illum 4
+Kd 1.00 1.00 1.00
+Ks 1.00 1.00 1.00
+d 0.3
+Ni 1.80
+Ns 4
+
+newmtl reflect_ball
+illum 4
+Kd 0.80 0.80 0.80
+Ka 1.00 1.00 1.00
+Ks 1.00 1.00 1.00
+Ns 16
+
+newmtl plain
+illum 4
+Kd 0.90 0.90 0.90
+Ns 32
+
+newmtl red_wall
+illum 4
+Kd 0.90 0.00 0.00
+Ns 4
+
+newmtl blue_wall
+illum 4
+Kd 0.00 0.00 0.90
+Ns 4
+
+newmtl pottery
+illum 4
+Kd 1.00 1.00 1.00
+
+newmtl light
+illum 4
+Kd 1.00 1.00 1.00
+Ke 1.00 1.00 1.00

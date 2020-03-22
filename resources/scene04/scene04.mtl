@@ -1,3 +1,35 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:cd20335920eb51c1345c302584e5c26bf2be8c15d569268a09aab19365541c7f
-size 407
+newmtl perfect_mirror
+illum 4
+Kd 1.00 1.00 1.00
+Ka 0.70 0.70 0.70
+Ks 1.00 1.00 1.00
+Ns 8
+
+newmtl plain
+illum 4
+Kd 1.00 1.00 1.00
+Ns 64
+
+newmtl pottery
+illum 4
+Kd 0.83 0.92 0.90
+
+newmtl refract_glass
+illum 4
+Kd 1.00 1.00 1.00
+Ks 1.00 1.00 1.00
+d 0.3
+Ni 1.5
+Ns 4
+
+newmtl reflect_glass
+illum 4
+Kd 1.00 1.00 1.00
+Ka 0.50 0.50 0.50
+Ks 1.00 1.00 1.00
+Ns 4
+
+newmtl light
+illum 4
+Kd 1.00 1.00 1.00
+Ke 1.00 1.00 1.00

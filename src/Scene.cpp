@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <limits>
+#include <exception>
 
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/rotate_vector.hpp>
@@ -184,12 +185,13 @@ void Scene::addObj(std::string filePath,
     std::vector<tinyobj::shape_t>    shapes;
     std::vector<tinyobj::material_t> materials;
     std::string err;
+    std::string warn;
     std::string mtlbasepath;
     size_t pos = filePath.find_last_of("/");
 
     mtlbasepath = filePath.substr(0, pos + 1);
 
-    bool res = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, filePath.c_str(), mtlbasepath.c_str());
+    bool res = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str(), mtlbasepath.c_str());
     glm::mat4 modelMatrix;
     modelMatrix = glm::translate(modelMatrix, translate);
     modelMatrix = glm::scale(modelMatrix, scale);
@@ -197,11 +199,18 @@ void Scene::addObj(std::string filePath,
     modelMatrix = glm::rotate(modelMatrix, glm::radians(rotate.y), glm::vec3(0, 1, 0));
     modelMatrix = glm::rotate(modelMatrix, glm::radians(rotate.z), glm::vec3(0, 0, 1));
 
-    if (!res)
+    if (!warn.empty())
+    {
+        std::cout << warn << std::endl;
+    }
+    if (!err.empty())
     {
         std::cout << err << std::endl;
+    }
 
-        return;
+    if (!res)
+    {
+        throw std::exception();
     }
     else
     {

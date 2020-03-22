@@ -1,7 +1,5 @@
 #include <iostream>
-#include <fstream>
 #include <string>
-#include <iomanip>
 
 #include <cxxopts.hpp>
 
@@ -18,7 +16,7 @@ enum SceneID
 };
 
 // Load a predefined scene
-bool loadScene(Scene& scene, SceneID sceneID)
+void loadScene(Scene& scene, SceneID sceneID)
 {
     switch (sceneID)
     {
@@ -68,12 +66,12 @@ bool loadScene(Scene& scene, SceneID sceneID)
 
     default:
         std::cout << "Error: undefined scene ID: " << (int)sceneID << std::endl;
-        return false;
+        return;
     }
 
     std::cout << "Scene " << (int)sceneID << " loaded." << std::endl;
 
-    return true;
+    return;
 }
 
 void renderScene(const Scene& scene,
@@ -109,21 +107,20 @@ void renderScene(const Scene& scene,
     delete renderer;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char** argv)
 {
     // Get render settings
     cxxopts::Options options("PathTracer", "Monte-Carlo path tracer");
 
-    auto& adder = options.add_options();
-
-    adder("s,scene", "Model scene ID (default 1)",
-          cxxopts::value<unsigned int>()->default_value("1"));
-    adder("r,ray", "Sample ray number per pixel (default 4)",
-          cxxopts::value<unsigned int>()->default_value("4"));
-    adder("d,depth", "Maximum trace depth (default 4)",
-          cxxopts::value<unsigned int>()->default_value("4"));
-    adder("p,pixel", "Pixel resolution width & height (default 1024)",
-          cxxopts::value<unsigned int>()->default_value("1024"));
+    options.add_options()
+        ("s,scene", "Model scene ID (default 1)",
+            cxxopts::value<unsigned int>()->default_value("1"))
+        ("r,ray", "Sample ray number per pixel (default 4)",
+            cxxopts::value<unsigned int>()->default_value("4"))
+        ("d,depth", "Maximum trace depth (default 4)",
+            cxxopts::value<unsigned int>()->default_value("4"))
+        ("p,pixel", "Pixel resolution width & height (default 1024)",
+            cxxopts::value<unsigned int>()->default_value("1024"));
 
     auto result = options.parse(argc, argv);
 
@@ -136,7 +133,11 @@ int main(int argc, char* argv[])
     // Create scene
     Scene scene;
 
-    if (!loadScene(scene, predefinedScene))
+    try
+    {
+        loadScene(scene, predefinedScene);
+    }
+    catch (...)
     {
         std::cout << "Scene loading failed." << std::endl;
         std::cout << "Press any key to exit.";
@@ -144,6 +145,7 @@ int main(int argc, char* argv[])
 
         return 1;
     }
+
     scene.initialize();
 
     // Render scene
