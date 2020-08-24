@@ -160,19 +160,4 @@ static inline float schlicksApprox(
     return R0 + (1 - R0) * glm::pow((1 - alpha), 5.0f);
 }
 
-// Returns a string that represents the current date and time
-static inline std::string currentDateTime()
-{
-    std::time_t t = std::time(0);   // get time now
-    std::tm* now = std::localtime(&t);
-    std::stringstream date;
-    date << (now->tm_year + 1900) << '-' 
-         << (now->tm_mon + 1) << '-'
-         <<  now->tm_mday << '-'
-         << now->tm_hour << '_'
-         << now->tm_min << '_'
-         << now->tm_sec;
-
-    return date.str();
-}
 } // namespace Math

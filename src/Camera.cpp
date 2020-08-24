@@ -4,32 +4,32 @@
 #include <fstream>
 #include <random>
 #include <algorithm>
-#include <chrono>
 #include <iomanip>
 
 #include "Ray.hpp"
 #include "Math.hpp"
 
-static const double LOG_INTERVAL = 0.3;
+static const double LOG_INTERVAL = 1.0;
 static const float  GAMMA        = 0.6f;
 
-inline void toHumanTime(long long time, long long& hours, long long& mins, long long& secs)
+inline HumanTime toHumanTime(long long time)
 {
-    secs  = time % 60;
-    mins  = (time / 60) % 60;
-    hours = ((time / 60) / 60);
+    return HumanTime{ ((time / 60) / 60), (time / 60) % 60, time % 60 };
 }
 
 Camera::Camera(const unsigned int _width, const unsigned int _height) : width(_width), height(_height)
 {
-    pixels.assign(width, std::vector<Pixel>(height));
+    pixels.assign(width, std::vector<glm::vec3>(height));
     discretizedPixels.assign(width, std::vector<glm::u8vec3>(height));
 
-    totalPixels   = width * height;
-    currentPixels = 0;
+    startTime = std::chrono::high_resolution_clock::now();
+    lastLog = std::chrono::high_resolution_clock::now();
+
+    totalLines = height;
+    currentLineNum = 0;
 }
 
-void Camera::render(const Scene& scene,
+HumanTime Camera::render(const Scene& scene,
                     Renderer   & renderer,
                     unsigned int samplePerPixel,
                     glm::vec3    eye,
@@ -69,11 +69,14 @@ void Camera::render(const Scene& scene,
     const glm::vec3 viewPlaneNormal = -glm::normalize(glm::cross(c1 - c2, c1 - c4));
 
     // Shoot multiple rays through every pixel
-    for (int y = 0; y < static_cast<int>(width); ++y)
+    for (int y = 0; y < static_cast<int>(width); y++)
     {
+        std::vector<glm::vec3>& column = pixels[y];
+        logProgress();
+
 #pragma omp parallel for
 
-        for (int z = 0; z < static_cast<int>(height); ++z)
+        for (int z = 0; z < static_cast<int>(height); z++)
         {
             // Shoot a bunch of rays through the pixel (y, z), and accumulate colors
             Ray ray;
@@ -104,23 +107,23 @@ void Camera::render(const Scene& scene,
             }
 
             // Set pixel color dependent on the traced ray
-            pixels[y][z].color = invSample * colorAccumulator;
+            column[z] = invSample * colorAccumulator;
 
-            logProgress();
         }
     }
 
     const auto endTime = std::chrono::high_resolution_clock::now();
     const auto took = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-    long long  hours, mins, secs;
-    toHumanTime(took / 1000, hours, mins, secs);
-    printf("\nRendering finished. Total time:  %02lld: %02lld: %02lld.\n", hours, mins, secs);
+    auto time = toHumanTime(took / 1000);
+    printf("\nRendering finished. Total time:  %02lld: %02lld: %02lld.\n", time.h, time.m, time.s);
 
     // Create the final discretized image. Should always be done immediately after the rendering step
     createImage();
+
+    return time;
 }
 
-bool Camera::writeImageTGA(const std::string path) const
+bool Camera::writeImageTGA(const std::string& path) const
 {
     // Initialize
     std::ofstream o(path.c_str(), std::ios::out | std::ios::binary);
@@ -168,7 +171,7 @@ void Camera::createImage()
     {
         for (size_t j = 0; j < height; ++j)
         {
-            const auto& c = pixels[i][j].color;
+            const auto& c = pixels[i][j];
             maxIntensity = std::max<float>(c.r, maxIntensity);
             maxIntensity = std::max<float>(c.g, maxIntensity);
             maxIntensity = std::max<float>(c.b, maxIntensity);
@@ -180,7 +183,7 @@ void Camera::createImage()
     {
         for (size_t j = 0; j < height; ++j)
         {
-            pixels[i][j].color = glm::pow(pixels[i][j].color, glm::vec3(GAMMA));
+            pixels[i][j] = glm::pow(pixels[i][j], glm::vec3(GAMMA));
         }
     }
 
@@ -195,7 +198,7 @@ void Camera::createImage()
     {
         for (size_t j = 0; j < height; ++j)
         {
-            const auto c = f * pixels[i][j].color;
+            const auto c = f * pixels[i][j];
             discretizedPixels[i][j].r = (glm::u8)round(c.r);
             discretizedPixels[i][j].g = (glm::u8)round(c.g);
             discretizedPixels[i][j].b = (glm::u8)round(c.b);
@@ -211,26 +214,23 @@ void Camera::createImage()
 inline void Camera::logProgress()
 {
     using namespace std::chrono;
-    static const auto startTime = high_resolution_clock::now();
-    static auto lastLog         = high_resolution_clock::now();
 
-    currentPixels++;
+    currentLineNum++;
     const auto now = high_resolution_clock::now();
-
-    // Estimate time left
-    auto elapsedTime               = duration_cast<milliseconds>(now - startTime).count();
-    const double percentageDone    = 100 * (currentPixels / (double)totalPixels);
-    const double percentageLeft    = (100 - percentageDone);
-    long long    estimatedTimeLeft = (long long)llround((elapsedTime / percentageDone) * percentageLeft / 1000);
 
     // Log once a while
     const double timeSinceLastLog = (double)duration_cast<milliseconds>(now - lastLog).count() / 1000;
 
     if (timeSinceLastLog > LOG_INTERVAL)
     {
+        // Estimate time left
+        auto elapsedTime               = duration_cast<milliseconds>(now - startTime).count();
+        const double percentageDone    = 100 * (currentLineNum / (double)totalLines);
+        const double percentageLeft    = (100 - percentageDone);
+        long long    estimatedTimeLeft = (long long)llround((elapsedTime / percentageDone) * percentageLeft / 1000);
+
         lastLog = now;
-        long long hours, mins, secs;
-        toHumanTime(estimatedTimeLeft, hours, mins, secs);
-        printf("\rProgress %.1lf%%. Estimated remaining %02lld: %02lld: %02lld.", percentageDone, hours, mins, secs);
+        auto time = toHumanTime(estimatedTimeLeft);
+        printf("\rProgress %.1lf%%. Estimated remaining %02lld: %02lld: %02lld.", percentageDone, time.h, time.m, time.s);
     }
 }

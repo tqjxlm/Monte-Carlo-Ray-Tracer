@@ -1,7 +1,6 @@
 #pragma once
 
 #include <glm/glm.hpp>
-
 #include <glm/gtc/constants.hpp>
 
 class Material {

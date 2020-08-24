@@ -3,7 +3,6 @@
 #include <vector>
 #include <functional>
 
-#include <glm/glm.hpp>
 #include <tiny_obj_loader/tiny_obj_loader.h>
 
 #include "Ray.hpp"

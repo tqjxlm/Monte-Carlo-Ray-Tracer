@@ -1,7 +1,5 @@
 #pragma once
 
-#include <glm/glm.hpp>
-
 #include "Ray.hpp"
 #include "AABB.hpp"
 #include "Math.hpp"
@@ -9,12 +7,12 @@
 class Triangle {
 public:
 
-    Triangle(glm::vec3 _v1,
-             glm::vec3 _v2,
-             glm::vec3 _v3,
-             glm::vec3 _n1,
-             glm::vec3 _n2,
-             glm::vec3 _n3,
+    Triangle(const glm::vec3 & _v1,
+             const glm::vec3 & _v2,
+             const glm::vec3 & _v3,
+             const glm::vec3 & _n1,
+             const glm::vec3 & _n2,
+             const glm::vec3 & _n3,
              int       index);
 
     Triangle(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3, glm::vec3 _norm, int index)

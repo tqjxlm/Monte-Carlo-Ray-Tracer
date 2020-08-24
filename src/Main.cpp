@@ -16,7 +16,7 @@ enum SceneID
 };
 
 // Load a predefined scene
-void loadScene(Scene& scene, SceneID sceneID)
+static void loadScene(Scene& scene, SceneID sceneID)
 {
     switch (sceneID)
     {
@@ -74,13 +74,13 @@ void loadScene(Scene& scene, SceneID sceneID)
     return;
 }
 
-void renderScene(const Scene& scene,
+static HumanTime renderScene(const Scene& scene,
                  SceneID      sceneID,
                  Camera     & camera,
                  int          maxRayDepth,
                  int          samplePerPixel)
 {
-    Renderer* renderer = new Renderer(scene, maxRayDepth);
+    Renderer renderer(scene, maxRayDepth);
     glm::vec3 eye;
     glm::vec3 direction;
     const glm::vec3 up = glm::vec3(0, 1, 0);
@@ -102,9 +102,23 @@ void renderScene(const Scene& scene,
         direction = glm::vec3(0, 0, -1);
     }
 
-    camera.render(scene, *renderer, samplePerPixel, eye, direction, up);
+    return camera.render(scene, renderer, samplePerPixel, eye, direction, up);;
+}
 
-    delete renderer;
+// Returns a string that represents the current date and time
+static std::string currentDateTime()
+{
+    std::time_t t = std::time(0);   // get time now
+    std::tm* now = std::localtime(&t);
+    std::stringstream date;
+    date << (now->tm_year + 1900) << '-' 
+         << (now->tm_mon + 1) << '-'
+         <<  now->tm_mday << '-'
+         << now->tm_hour << '_'
+         << now->tm_min << '_'
+         << now->tm_sec;
+
+    return date.str();
 }
 
 int main(int argc, char** argv)
@@ -150,12 +164,13 @@ int main(int argc, char** argv)
 
     // Render scene
     Camera camera(width, height);
-    renderScene(scene, predefinedScene, camera, maxRayDepth, samplePerPixel);
+    auto time = renderScene(scene, predefinedScene, camera, maxRayDepth, samplePerPixel);
 
     // Write out
-    std::string imageFileName = Math::currentDateTime() + ".tga";
-    camera.writeImageTGA(imageFileName);
-    std::cout << "Image saved to: " << imageFileName << "." << std::endl;
+    char fileNameBuffer[80];
+    sprintf_s(fileNameBuffer, "Scene%d_%dspp(%lld-%lld-%lld).tga", predefinedScene, samplePerPixel, time.h, time.m, time.s);
+    camera.writeImageTGA(fileNameBuffer);
+    std::cout << "Image saved to: " << fileNameBuffer << std::endl;
 
     // Finished
     std::cout << "Press any key to exit.";

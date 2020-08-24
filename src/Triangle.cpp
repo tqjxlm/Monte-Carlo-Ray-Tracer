@@ -7,8 +7,8 @@
 
 #include "Math.hpp"
 
-Triangle::Triangle(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3,
-                   glm::vec3 n1, glm::vec3 n2, glm::vec3 n3, int index)
+Triangle::Triangle(const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3,
+    const glm::vec3& n1, const glm::vec3& n2, const glm::vec3& n3, int index)
     : vertices{v1, v2, v3}, normals{n1, n2, n3}, edges{v2 - v1, v3 - v1}, meshIndex(index)
 {
     v       = vertices[2] - vertices[0];
