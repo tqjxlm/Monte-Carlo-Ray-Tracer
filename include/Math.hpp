@@ -2,13 +2,8 @@
 
 #include <random>
 #include <cassert>
-#include <iostream>
-#include <sstream>
 #include <numeric>
 #include <algorithm>
-#include <string>
-#include <ctime>
-#include <chrono>
 
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/rotate_vector.hpp>
@@ -158,6 +153,13 @@ static inline float schlicksApprox(
     float alpha = glm::dot(normal, -incomingDirection);
 
     return R0 + (1 - R0) * glm::pow((1 - alpha), 5.0f);
+}
+
+static inline void sortByComponent(glm::vec3& a, glm::vec3& b)
+{
+    if (a.x < b.x) std::swap(a.x, b.x);
+    if (a.y < b.y) std::swap(a.y, b.y);
+    if (a.z < b.z) std::swap(a.z, b.z);
 }
 
 } // namespace Math

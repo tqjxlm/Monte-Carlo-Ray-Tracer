@@ -3,6 +3,7 @@
 #include <cassert>
 #include <limits>
 #include <exception>
+#include <iostream>
 
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/rotate_vector.hpp>
